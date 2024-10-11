@@ -1,4 +1,4 @@
-use panduza_platform_core::Error as PlatformError;
+use crate::Error;
 use serde_json::json;
 
 use crate::ConnectorLogger;
@@ -7,6 +7,7 @@ use crate::ConnectorLogger;
 static USB_SERIAL_KEY: &str = "usb_serial";
 
 /// Usb settings for devices
+#[derive(Debug)]
 pub struct UsbSettings {
     /// Logger
     pub logger: ConnectorLogger,
@@ -53,16 +54,16 @@ impl UsbSettings {
     pub fn set_serial_from_json_settings(
         mut self,
         settings: &serde_json::Value,
-    ) -> Result<Self, PlatformError> {
+    ) -> Result<Self, Error> {
         self.serial = Some(
             settings
                 .get(USB_SERIAL_KEY)
-                .ok_or(PlatformError::BadSettings(format!(
+                .ok_or(Error::BadSettings(format!(
                     "Unable to get \"{}\"",
                     USB_SERIAL_KEY
                 )))?
                 .as_str()
-                .ok_or(PlatformError::BadSettings(format!(
+                .ok_or(Error::BadSettings(format!(
                     "\"{}\" not a string",
                     USB_SERIAL_KEY
                 )))?
@@ -136,7 +137,7 @@ mod tests {
 
     #[test]
     fn test_new() {
-        let settings = Settings::new();
+        let settings = UsbSettings::new();
         assert_eq!(settings.vendor, None);
         assert_eq!(settings.model, None);
         assert_eq!(settings.serial, None);
@@ -147,7 +148,7 @@ mod tests {
         let json_settings = serde_json::json!({
             "usb_serial": "COM1"
         });
-        let mut settings = Settings::new()
+        let mut settings = UsbSettings::new()
             .set_serial_from_json_settings(&json_settings)
             .unwrap();
         assert_eq!(settings.serial, Some("COM1".to_string()));
@@ -158,14 +159,14 @@ mod tests {
         let json_settings = serde_json::json!({
             "usb_serial": 5
         });
-        let mut settings = Settings::new().set_serial_from_json_settings(&json_settings);
+        let mut settings = UsbSettings::new().set_serial_from_json_settings(&json_settings);
         assert_eq!(settings.is_err(), true);
     }
 
     #[test]
     fn test_set_serial_from_json_settings_empty_input() {
         let json_settings = serde_json::json!({});
-        let mut settings = Settings::new().set_serial_from_json_settings(&json_settings);
+        let mut settings = UsbSettings::new().set_serial_from_json_settings(&json_settings);
         assert_eq!(settings.is_err(), true);
     }
 
@@ -175,7 +176,7 @@ mod tests {
             "usb_serial": 5
         });
         let mut settings =
-            Settings::new().set_serial_from_json_settings_or(&json_settings, "OK_SERIAL");
+        UsbSettings::new().set_serial_from_json_settings_or(&json_settings, "OK_SERIAL");
         assert_eq!(settings.serial, Some("OK_SERIAL".to_string()));
     }
 }

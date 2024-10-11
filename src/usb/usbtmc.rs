@@ -7,7 +7,7 @@ use tokio;
 use usbtmc_message::Sequencer;
 
 use panduza_platform_core::platform_error_result;
-use panduza_platform_core::Error as PlatformError;
+use crate::Error;
 use panduza_platform_core::FunctionResult as PlatformFunctionResult;
 
 lazy_static! {
@@ -119,7 +119,7 @@ impl UsbtmcConnector {
         Ok(())
     }
 
-    pub async fn ask(&mut self, command: String) -> Result<String, PlatformError> {
+    pub async fn ask(&mut self, command: String) -> Result<String, Error> {
         match self.core.as_ref() {
             Some(val) => val.lock().await.write_then_read(command).await,
             None => platform_error_result!("Unable to write then read"),
@@ -165,7 +165,7 @@ impl UsbtmcCore {
         Ok(())
     }
 
-    async fn write_then_read(&mut self, command: String) -> Result<String, PlatformError> {
+    async fn write_then_read(&mut self, command: String) -> Result<String, Error> {
         let itf = match self.interface.as_ref() {
             Some(val) => val,
             None => return platform_error_result!("No USB interface"),

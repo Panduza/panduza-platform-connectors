@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use lazy_static::lazy_static;
 
-use panduza_platform_core::Error as PlatformError;
+use crate::Error;
 
 use crate::ConnectorLogger;
 use crate::SerialSettings;
@@ -18,7 +18,7 @@ lazy_static! {
 }
 
 // get should return an error message
-pub async fn get(serial_settings: &SerialSettings) -> Result<Connector, PlatformError> {
+pub async fn get(serial_settings: &SerialSettings) -> Result<Connector, Error> {
     let mut gate = GATE.lock().await;
     gate.get(serial_settings)
 }
@@ -31,7 +31,7 @@ pub struct Gate {
 }
 
 impl Gate {
-    fn get(&mut self, serial_settings: &SerialSettings) -> Result<Connector, PlatformError> {
+    fn get(&mut self, serial_settings: &SerialSettings) -> Result<Connector, Error> {
         // Debug
         self.logger.debug("GET a new serial-slip connector");
         self.logger
@@ -41,7 +41,7 @@ impl Gate {
         let key = serial_settings
             .port_name
             .as_ref()
-            .ok_or(PlatformError::BadSettings(
+            .ok_or(Error::BadSettings(
                 "Port name is not set".to_string(),
             ))?;
 
@@ -64,7 +64,7 @@ impl Gate {
         let instance = self
             .instances
             .get(key)
-            .ok_or(PlatformError::BadSettings(format!(
+            .ok_or(Error::BadSettings(format!(
                 "Unable to find the tty connector \"{}\"",
                 key
             )))?;

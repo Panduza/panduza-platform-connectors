@@ -6,9 +6,6 @@ edition = "2021"
 
 [dependencies]
 
-# The panduza connectors library
-panduza-platform-core = { git = "https://github.com/Panduza/panduza-platform-core", branch = "main" }
-
 # Main async framework for the platform
 tokio = { version = "1", features = ["full", "tracing"] }
 
@@ -34,6 +31,7 @@ lazy_static = "1.4.0"
 
 serial-line-ip = "0.5.0"
 
+thiserror = "1.0.0"
 
 # Trace instrumentation at disabled levels will be skipped and will not even be present
 # in the resulting binary unless the verbosity level is specified dynamically.

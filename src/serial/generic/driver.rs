@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use panduza_platform_core::Error as PlatformError;
+use crate::Error;
 
 use tokio::io::AsyncReadExt;
 use tokio::io::AsyncWriteExt;
@@ -55,7 +55,7 @@ impl Driver {
 
     /// Initialize the driver
     ///
-    pub async fn init(&mut self) -> Result<(), PlatformError> {
+    pub async fn init(&mut self) -> Result<(), Error> {
         // Internal driver already initialized by an other entity => OK
         if self.serial_stream.is_some() {
             return Ok(());
@@ -63,7 +63,7 @@ impl Driver {
 
         // Get the port name
         let port_name = self.settings.port_name.as_ref().ok_or_else(|| {
-            PlatformError::BadSettings("Port name is not set in settings".to_string())
+            Error::BadSettings("Port name is not set in settings".to_string())
         })?;
 
         // Setup builder
@@ -75,7 +75,7 @@ impl Driver {
 
         // Build the stream
         self.serial_stream = Some(SerialStream::open(&serial_builder).map_err(|e| {
-            PlatformError::BadSettings(format!("Unable to open serial stream: {}", e))
+            Error::BadSettings(format!("Unable to open serial stream: {}", e))
         })?);
 
         Ok(())
@@ -83,7 +83,7 @@ impl Driver {
 
     /// Write a command on the serial stream
     ///
-    pub async fn write_time_locked(&mut self, command: &[u8]) -> Result<usize, PlatformError> {
+    pub async fn write_time_locked(&mut self, command: &[u8]) -> Result<usize, Error> {
         // Check if a time lock is set
         if let Some(lock) = self.time_lock.as_mut() {
             let elapsed = tokio::time::Instant::now() - lock.t0;
@@ -98,11 +98,11 @@ impl Driver {
         let write_result = self
             .serial_stream
             .as_mut()
-            .ok_or_else(|| PlatformError::BadSettings(format!("No serial stream")))?
+            .ok_or_else(|| Error::BadSettings(format!("No serial stream")))?
             .write(command)
             .await
             .map_err(|e| {
-                PlatformError::BadSettings(format!("Unable to write on serial stream: {}", e))
+                Error::BadSettings(format!("Unable to write on serial stream: {}", e))
             });
 
         // Set the time lock
@@ -122,18 +122,18 @@ impl Driver {
         &mut self,
         command: &[u8],
         response: &mut [u8],
-    ) -> Result<usize, PlatformError> {
+    ) -> Result<usize, Error> {
         // Write
         self.write_time_locked(command).await?;
 
         // Read the response
         self.serial_stream
             .as_mut()
-            .ok_or_else(|| PlatformError::BadSettings("No serial stream".to_string()))?
+            .ok_or_else(|| Error::BadSettings("No serial stream".to_string()))?
             .read(response)
             .await
             .map_err(|e| {
-                PlatformError::BadSettings(format!("Unable to read on serial stream {:?}", e))
+                Error::BadSettings(format!("Unable to read on serial stream {:?}", e))
             })
     }
 
@@ -144,7 +144,7 @@ impl Driver {
         command: &[u8],
         response: &mut [u8],
         end: u8,
-    ) -> Result<usize, PlatformError> {
+    ) -> Result<usize, Error> {
         // Write
         self.write_time_locked(command).await?;
 
@@ -154,11 +154,11 @@ impl Driver {
             let mut single_buf = [0u8; 1];
             self.serial_stream
                 .as_mut()
-                .ok_or_else(|| PlatformError::BadSettings("No serial stream".to_string()))?
+                .ok_or_else(|| Error::BadSettings("No serial stream".to_string()))?
                 .read_exact(&mut single_buf)
                 .await
                 .map_err(|e| {
-                    PlatformError::BadSettings(format!("Unable to read on serial stream {:?}", e))
+                    Error::BadSettings(format!("Unable to read on serial stream {:?}", e))
                 })?;
             response[n] = single_buf[0];
             n += 1;

@@ -6,7 +6,7 @@ use lazy_static::lazy_static;
 use futures_lite::future::block_on;
 
 use panduza_core::FunctionResult as PlatformFunctionResult;
-use panduza_core::Error as PlatformError;
+use panduza_core::Error as Error;
 use panduza_core::platform_error_result;
 
 lazy_static! {
@@ -146,7 +146,7 @@ impl UsbConnector {
         }
     }
 
-    pub async fn read(&mut self) -> Result<String, PlatformError> {
+    pub async fn read(&mut self) -> Result<String, Error> {
         match self.core.as_ref() {
             Some(val) => val.lock().await.read().await,
             None => platform_error_result!("Unable to write")
@@ -222,7 +222,7 @@ impl UsbCore {
     }
 
 
-    async fn read(&mut self) -> Result<String, PlatformError> {
+    async fn read(&mut self) -> Result<String, Error> {
 
         let mut msg = String::new();
 

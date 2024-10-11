@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use panduza_platform_core::Error as PlatformError;
+use crate::Error;
 
 use tokio_serial::available_ports as available_serial_ports;
 use tokio_serial::DataBits;
@@ -71,7 +71,7 @@ impl SerialSettings {
         self,
         json_settings: &serde_json::Value,
         usb_settings: &UsbSettings,
-    ) -> Result<Self, PlatformError> {
+    ) -> Result<Self, Error> {
         // Try to extract the port name from the json settings
         Self::extract_port_name_from_json_settings(json_settings)
             // If it fails, try to find the port name from the usb settings
@@ -86,7 +86,7 @@ impl SerialSettings {
     pub fn set_port_name_from_json_settings(
         mut self,
         json_settings: &serde_json::Value,
-    ) -> Result<Self, PlatformError> {
+    ) -> Result<Self, Error> {
         self.port_name = Some(Self::extract_port_name_from_json_settings(json_settings)?);
         Ok(self)
     }
@@ -95,15 +95,15 @@ impl SerialSettings {
     ///
     pub fn extract_port_name_from_json_settings(
         json_settings: &serde_json::Value,
-    ) -> Result<String, PlatformError> {
+    ) -> Result<String, Error> {
         Ok(json_settings
             .get(SERIAL_PORT_NAME_KEY)
-            .ok_or(PlatformError::BadSettings(format!(
+            .ok_or(Error::BadSettings(format!(
                 "Unable to get \"{}\"",
                 SERIAL_PORT_NAME_KEY
             )))?
             .as_str()
-            .ok_or(PlatformError::BadSettings(format!(
+            .ok_or(Error::BadSettings(format!(
                 "\"{}\" not a string",
                 SERIAL_PORT_NAME_KEY
             )))?
@@ -115,7 +115,7 @@ impl SerialSettings {
     pub fn set_port_name_from_usb_settings(
         mut self,
         usb_settings: &UsbSettings,
-    ) -> Result<Self, PlatformError> {
+    ) -> Result<Self, Error> {
         self.port_name = Some(Self::find_port_name_from_usb_settings(usb_settings)?);
         Ok(self)
     }
@@ -131,7 +131,7 @@ impl SerialSettings {
     ///
     pub fn find_port_name_from_usb_settings(
         usb_settings: &UsbSettings,
-    ) -> Result<String, PlatformError> {
+    ) -> Result<String, Error> {
         Self::find_serial_port_info_from_usb_settings(usb_settings).map(|info| info.port_name)
     }
 
@@ -139,9 +139,9 @@ impl SerialSettings {
     ///
     pub fn find_serial_port_info_from_usb_settings(
         usb_settings: &UsbSettings,
-    ) -> Result<SerialPortInfo, PlatformError> {
+    ) -> Result<SerialPortInfo, Error> {
         available_serial_ports()
-            .map_err(|e| PlatformError::BadSettings(format!("Enable to get serial ports {:?}", e)))
+            .map_err(|e| Error::BadSettings(format!("Enable to get serial ports {:?}", e)))
             .and_then(|ports| {
                 for port in ports {
                     // Check only usb port type
@@ -152,7 +152,7 @@ impl SerialSettings {
                         }
                     }
                 }
-                Err(PlatformError::BadSettings(format!(
+                Err(Error::BadSettings(format!(
                     "No matching usb device ( availables: {} )",
                     Self::list_all_serial_ports()
                 )))

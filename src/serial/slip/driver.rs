@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use panduza_platform_core::Error as PlatformError;
+use crate::Error;
 
 use tokio::io::AsyncReadExt;
 use tokio::io::AsyncWriteExt;
@@ -64,7 +64,7 @@ impl Driver {
 
     /// Initialize the driver
     ///
-    pub async fn init(&mut self) -> Result<(), PlatformError> {
+    pub async fn init(&mut self) -> Result<(), Error> {
         // Internal driver already initialized by an other entity => OK
         if self.serial_stream.is_some() {
             return Ok(());
@@ -72,7 +72,7 @@ impl Driver {
 
         // Get the port name
         let port_name = self.settings.port_name.as_ref().ok_or_else(|| {
-            PlatformError::BadSettings("Port name is not set in settings".to_string())
+            Error::BadSettings("Port name is not set in settings".to_string())
         })?;
 
         // Setup builder
@@ -84,7 +84,7 @@ impl Driver {
 
         // Build the stream
         self.serial_stream = Some(SerialStream::open(&serial_builder).map_err(|e| {
-            PlatformError::BadSettings(format!("Unable to open serial stream: {}", e))
+            Error::BadSettings(format!("Unable to open serial stream: {}", e))
         })?);
 
         Ok(())
@@ -92,7 +92,7 @@ impl Driver {
 
     /// Write a command on the serial stream
     ///
-    async fn write_time_locked(&mut self, command: &[u8]) -> Result<usize, PlatformError> {
+    async fn write_time_locked(&mut self, command: &[u8]) -> Result<usize, Error> {
         // Check if a time lock is set
         if let Some(lock) = self.time_lock.as_mut() {
             let elapsed = tokio::time::Instant::now() - lock.t0;
@@ -107,11 +107,11 @@ impl Driver {
         let write_result = self
             .serial_stream
             .as_mut()
-            .ok_or_else(|| PlatformError::BadSettings("No serial stream".to_string()))?
+            .ok_or_else(|| Error::BadSettings("No serial stream".to_string()))?
             .write(command)
             .await
             .map_err(|e| {
-                PlatformError::BadSettings(format!("Unable to write on serial stream: {}", e))
+                Error::BadSettings(format!("Unable to write on serial stream: {}", e))
             });
 
         // Set the time lock
@@ -131,7 +131,7 @@ impl Driver {
         &mut self,
         command: &[u8],
         response: &mut [u8],
-    ) -> Result<usize, PlatformError> {
+    ) -> Result<usize, Error> {
         match self.settings.read_timeout {
             // If the timeout is set, use it
             Some(timeout_value) => {
@@ -139,7 +139,7 @@ impl Driver {
                     timeout(timeout_value, self.__write_then_read(command, response))
                         .await
                         .map_err(|e| {
-                            PlatformError::BadSettings(format!("Timeout reading {:?}", e))
+                            Error::BadSettings(format!("Timeout reading {:?}", e))
                         })??,
                 );
             }
@@ -157,7 +157,7 @@ impl Driver {
         &mut self,
         command: &[u8],
         response: &mut [u8],
-    ) -> Result<usize, PlatformError> {
+    ) -> Result<usize, Error> {
         // Prepare SLIP encoding
         // Prepare a buffer of 1024 Bytes (need to be change later TODO)
         // and prepare the encoder object
@@ -168,14 +168,14 @@ impl Driver {
         let mut totals = slip_encoder
             .encode(command, &mut encoded_command)
             .map_err(|e| {
-                PlatformError::BadSettings(format!("Unable to encode command: {:?}", e))
+                Error::BadSettings(format!("Unable to encode command: {:?}", e))
             })?;
 
         // Finalise the encoding
         totals += slip_encoder
             .finish(&mut encoded_command[totals.written..])
             .map_err(|e| {
-                PlatformError::BadSettings(format!("Unable to finsh command encoding: {:?}", e))
+                Error::BadSettings(format!("Unable to finsh command encoding: {:?}", e))
             })?;
 
         // Write command slip encoded
@@ -188,11 +188,11 @@ impl Driver {
             self.in_buf_size += self
                 .serial_stream
                 .as_mut()
-                .ok_or_else(|| PlatformError::BadSettings("No serial stream".to_string()))?
+                .ok_or_else(|| Error::BadSettings("No serial stream".to_string()))?
                 .read(&mut self.in_buf[self.in_buf_size..])
                 .await
                 .map_err(|e| {
-                    PlatformError::BadSettings(format!("Unable to read on serial stream {:?}", e))
+                    Error::BadSettings(format!("Unable to read on serial stream {:?}", e))
                 })?;
 
             // Try decoding
@@ -200,7 +200,7 @@ impl Driver {
             let (total_decoded, out_slice, end) = slip_decoder
                 .decode(&self.in_buf[..self.in_buf_size], response)
                 .map_err(|e| {
-                    PlatformError::BadSettings(format!("Unable to decode response: {:?}", e))
+                    Error::BadSettings(format!("Unable to decode response: {:?}", e))
                 })?;
 
             // Reste counter
