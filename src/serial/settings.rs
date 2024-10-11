@@ -18,7 +18,7 @@ static SERIAL_PORT_NAME_KEY: &str = "usb_serial";
 
 /// Settings for the serial connector
 ///
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SerialSettings {
     /// Local logger
     pub logger: ConnectorLogger,
