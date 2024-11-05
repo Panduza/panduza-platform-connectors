@@ -12,7 +12,7 @@ use super::Connector;
 
 lazy_static! {
     static ref GATE: tokio::sync::Mutex<Gate> = tokio::sync::Mutex::new(Gate {
-        logger: ConnectorLogger::new("serial", "generic", ""),
+        logger: ConnectorLogger::new("serial", "slip", ""),
         instances: HashMap::new()
     });
 }

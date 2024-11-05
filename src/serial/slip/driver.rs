@@ -65,8 +65,13 @@ impl Driver {
     /// Initialize the driver
     ///
     pub async fn init(&mut self) -> Result<(), Error> {
+        //
+        //
+        self.logger.info("init");
+
         // Internal driver already initialized by an other entity => OK
         if self.serial_stream.is_some() {
+            self.logger.warn("already init");
             return Ok(());
         }
 
@@ -86,6 +91,9 @@ impl Driver {
         self.serial_stream = Some(SerialStream::open(&serial_builder).map_err(|e| {
             Error::BadSettings(format!("Unable to open serial stream: {}", e))
         })?);
+
+
+        self.logger.info("stream ready");
 
         Ok(())
     }
