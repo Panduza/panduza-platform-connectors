@@ -46,7 +46,7 @@ impl Gate {
             ))?;
 
         // if the instance is not found, it means that the port is not opened yet
-        if !self.instances.contains_key(key) {
+        // if !self.instances.contains_key(key) {
             //
             self.logger
                 .info(format!("Creating a new serial connector for {}", key));
@@ -54,22 +54,22 @@ impl Gate {
             // Create a new instance
             let new_instance = Driver::new(serial_settings).into_connector();
 
-            // Save the instance
-            self.instances.insert(key.to_string(), new_instance.clone());
+            // // Save the instance
+            // self.instances.insert(key.to_string(), new_instance.clone());
 
             return Ok(new_instance.clone());
-        }
+        // }
 
-        // Try to find the instance
-        let instance = self
-            .instances
-            .get(key)
-            .ok_or(Error::BadSettings(format!(
-                "Unable to find the tty connector \"{}\"",
-                key
-            )))?;
+        // // Try to find the instance
+        // let instance = self
+        //     .instances
+        //     .get(key)
+        //     .ok_or(Error::BadSettings(format!(
+        //         "Unable to find the tty connector \"{}\"",
+        //         key
+        //     )))?;
 
-        // Return the instance
-        Ok(instance.clone())
+        // // Return the instance
+        // Ok(instance.clone())
     }
 }
