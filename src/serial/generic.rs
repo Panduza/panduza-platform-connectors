@@ -47,7 +47,7 @@ impl Driver {
 
     /// Initialize the driver
     ///
-    pub async fn init(&mut self) -> Result<(), Error> {
+    pub fn init(&mut self) -> Result<(), Error> {
         // Internal driver already initialized by an other entity => OK
         if self.serial_stream.is_some() {
             return Ok(());
