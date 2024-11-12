@@ -33,6 +33,13 @@ serial-line-ip = "0.5.0"
 
 thiserror = "1.0.0"
 
+# 
+# To manage serial communication
+# Better than 'tokio-serial' in particular on Windows
+# 
+serial2-tokio = "0.1.13"
+
+
 # Trace instrumentation at disabled levels will be skipped and will not even be present
 # in the resulting binary unless the verbosity level is specified dynamically.
 # This level is configured separately for release and debug builds.
