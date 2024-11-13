@@ -125,45 +125,35 @@ impl Driver {
     }
 
 
-    // ///
-    // ///
-    // pub async fn write_then_read_until(
-    //     &mut self,
-    //     command: &[u8],
-    //     response: &mut [u8],
-    //     end: u8,
-    // ) -> Result<usize, Error> {
-    //     // Write
-    //     self.write_time_locked(command).await?;
+    ///
+    ///
+    pub async fn write_then_read_until(
+        &mut self,
+        command: &[u8],
+        response: &mut [u8],
+        end: u8,
+    ) -> Result<usize, Error> {
+        // Write
+        self.write_time_locked(command).await?;
 
-    //     // Read the response until "end"
-    //     let mut n = 0;
-    //     loop {
-    //         let mut single_buf = [0u8; 1];
-    //         self.serial_stream
-    //             .as_mut()
-    //             .ok_or_else(|| Error::BadSettings("No serial stream".to_string()))?
-    //             .read_exact(&mut single_buf)
-    //             .await
-    //             .map_err(|e| {
-    //                 Error::BadSettings(format!("Unable to read on serial stream {:?}", e))
-    //             })?;
-    //         response[n] = single_buf[0];
-    //         n += 1;
-    //         if single_buf[0] == end {
-    //             break;
-    //         }
-    //     }
-    //     Ok(n)
-    // }
+        // Read the response until "end"
+        let mut n = 0;
+        loop {
+            let mut single_buf = [0u8; 1];
+            self.port
+                .read_exact(&mut single_buf)
+                .map_err(|e| {
+                    Error::BadSettings(format!("Unable to read on serial stream {:?}", e))
+                })?;
+            response[n] = single_buf[0];
+            n += 1;
+            if single_buf[0] == end {
+                break;
+            }
+        }
+        Ok(n)
+    }
 }
 
-// impl Drop for Driver {
-//     fn drop(&mut self) {
-//         // Close the serial stream
-//         self.logger.warn("Closing serial stream");
-//         self.serial_stream = None;
-//     }
-// }
 
 
