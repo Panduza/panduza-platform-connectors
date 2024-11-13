@@ -2,8 +2,10 @@
 use crate::SerialSettings;
 use crate::Error;
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::sync::Mutex;
 use serial2::SerialPort;
+use tokio::time::sleep;
 use crate::serial::time_lock::TimeLock;
 use crate::ConnectorLogger;
 
@@ -97,6 +99,31 @@ impl Driver {
                 Error::BadSettings(format!("Unable to read on serial stream {:?}", e))
             })
     }
+
+
+    /// Lock the connector to write a command then wait for the answers
+    ///
+    pub async fn write_then_read_during(
+        &mut self,
+        command: &[u8],
+        response: &mut [u8],
+        duration: Duration
+    ) -> Result<usize, Error> {
+        // Write
+        self.write_time_locked(command).await?;
+
+
+        sleep(duration).await;
+
+ 
+        // Read the response
+        self.port
+            .read(response)
+            .map_err(|e| {
+                Error::BadSettings(format!("Unable to read on serial stream {:?}", e))
+            })
+    }
+
 
     // ///
     // ///
