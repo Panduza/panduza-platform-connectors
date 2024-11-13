@@ -36,8 +36,9 @@ thiserror = "1.0.0"
 # 
 # To manage serial communication
 # Better than 'tokio-serial' in particular on Windows
+# In the connector we do not need async features
 # 
-serial2-tokio = "0.1.13"
+serial2 = "0.2.28"
 
 
 # Trace instrumentation at disabled levels will be skipped and will not even be present

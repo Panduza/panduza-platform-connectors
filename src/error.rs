@@ -2,6 +2,9 @@ use thiserror::Error as ThisError;
 
 #[derive(ThisError, Debug, Clone)]
 pub enum Error {
+    #[error("Drive cannot open the resource")]
+    UnableToOpen(String),
+    
     #[error("Cannot publish to the message attribute topic")]
     MessageAttributePublishError(String),
     #[error("Cannot subscribe to the message attribute topic")]
